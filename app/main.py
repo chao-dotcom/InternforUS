@@ -284,8 +284,18 @@ async def get_latest_internships(
     return internships
 
 @app.post("/api/scrape")
-async def trigger_scrape(db: Session = Depends(get_db)):
-    """Manually trigger a scrape (for testing)"""
+async def trigger_scrape(
+    section: str = None,
+    db: Session = Depends(get_db)
+):
+    """Manually trigger a scrape (for testing)
+    
+    Args:
+        section: Optional section name to filter (e.g., "Software Engineering")
+                Only internships from that section will be scraped.
+                Valid sections: "Software Engineering", "Product Management", 
+                "Data Science", "Quantitative Finance", "Hardware Engineering", etc.
+    """
     try:
         scraper = EnhancedInternshipScraper()
         
@@ -300,8 +310,8 @@ async def trigger_scrape(db: Session = Depends(get_db)):
                 "total_internships_in_db": db.query(Internship).filter(Internship.is_active == True).count()
             }
         
-        # Test parsing
-        test_parsed = scraper.parse_markdown_table(markdown)
+        # Test parsing with section filter if provided
+        test_parsed = scraper.parse_markdown_table(markdown, section_filter=section)
         if len(test_parsed) == 0:
             # Debug: Check what we got - search the ENTIRE file, not just first 100 lines
             lines = markdown.split('\n')
@@ -312,6 +322,7 @@ async def trigger_scrape(db: Session = Depends(get_db)):
             return {
                 "message": "Scrape completed but found 0 internships",
                 "error": "Parser found no internships. The GitHub markdown format may have changed or table is empty.",
+                "section_filter": section,
                 "debug_info": {
                     "markdown_length": len(markdown),
                     "total_lines": len(lines),
@@ -330,7 +341,7 @@ async def trigger_scrape(db: Session = Depends(get_db)):
                 "troubleshooting": "Check if the GitHub URL is correct and the markdown table format matches expected structure"
             }
         
-        new_internships, updated_internships = scraper.scrape_and_process(db)
+        new_internships, updated_internships = scraper.scrape_and_process(db, section_filter=section)
         
         # Get total internships in database for context
         total_in_db = db.query(Internship).filter(Internship.is_active == True).count()
@@ -340,7 +351,8 @@ async def trigger_scrape(db: Session = Depends(get_db)):
         notifier.process_immediate_notifications(db, new_internships, updated_internships)
         
         return {
-            "message": "Scrape completed successfully",
+            "message": f"Scrape completed successfully{' (section: ' + section + ')' if section else ''}",
+            "section_filter": section,
             "new_internships": len(new_internships),
             "updated_internships": len(updated_internships),
             "total_internships_in_db": total_in_db,

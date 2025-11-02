@@ -69,7 +69,7 @@ uvicorn app.main:app --reload
 Then open http://localhost:8000 in your browser. The scheduler runs automatically, so you don't need to start it separately. It'll scrape daily at 9 AM and send digest emails hourly.
 
 You can also check out:
-- API docs: http://localhost:8000/docs
+- **Interactive API docs** (Swagger UI): http://localhost:8000/docs - **Test all API endpoints directly in your browser!**
 - Web dashboard: http://localhost:8000/dashboard.html
 
 ## API overview
@@ -86,7 +86,8 @@ Main endpoints:
 - `GET /api/internships` - List all (supports filters: `?company=X&location=Y&sponsorship=Z`)
 - `GET /api/internships/{id}` - Get specific internship
 - `GET /api/internships/{id}/changes` - See change history
-- `POST /api/scrape` - Manually trigger a scrape
+- `POST /api/scrape` - Manually trigger a scrape (all sections)
+- `POST /api/scrape?section=Software Engineering` - Scrape specific section only
 
 **Analytics:**
 - `GET /api/analytics/dashboard` - System stats
@@ -94,7 +95,19 @@ Main endpoints:
 - `GET /api/analytics/trending/roles` - Popular roles
 - `GET /api/analytics/weekly-summary` - Last 7 days summary
 
-Check http://localhost:8000/docs for the full interactive API documentation.
+**💡 Tip:** You can test all API endpoints directly in the browser! Visit http://localhost:8000/docs to access the interactive Swagger UI where you can:
+- See all available endpoints
+- View request/response schemas
+- Test endpoints with sample data
+- Try the `/api/scrape?section=Software Engineering` endpoint to scrape specific sections
+
+### Interactive API Documentation
+
+![API Docs Screenshot](asset/docs_screenshot.png)
+
+The Swagger UI provides an intuitive interface to explore and test all endpoints:
+
+![API Response Example](asset/api_response.png)
 
 ## Quick examples
 
@@ -117,7 +130,14 @@ curl -X POST http://localhost:8000/api/users/register \
 
 Trigger a scrape:
 ```bash
+# Scrape all sections
 curl -X POST http://localhost:8000/api/scrape
+
+# Scrape only Software Engineering internships
+curl -X POST "http://localhost:8000/api/scrape?section=Software Engineering"
+
+# Scrape only Data Science internships
+curl -X POST "http://localhost:8000/api/scrape?section=Data Science"
 ```
 
 Get internships:
