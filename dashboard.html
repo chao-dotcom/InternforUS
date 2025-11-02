@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intern For US - Terminal Interface</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Share Tech Mono', 'Courier New', monospace;
+            background: #ffffff;
+            color: #000000;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Scanline effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.03),
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        /* Subtle paper texture */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(0, 0, 0, 0.01) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 9998;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border: 2px solid #000000;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.02);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .ascii-art {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.2;
+            color: #000000;
+            text-shadow: none;
+            white-space: pre;
+            margin-bottom: 10px;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            text-shadow: none;
+            letter-spacing: 3px;
+            color: #000000;
+        }
+        
+        .header p {
+            font-size: 14px;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .terminal-prompt {
+            color: #000000;
+            font-weight: bold;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: #ffffff;
+            border: 2px solid #000000;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border: 1px solid #333333;
+            opacity: 0.3;
+            z-index: -1;
+        }
+        
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid #000000;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #000000;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 8px;
+            background: #ffffff;
+            border: 1px solid #000000;
+            color: #000000;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 12px;
+            outline: none;
+        }
+        
+        input:focus, select:focus {
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+            border-color: #333333;
+        }
+        
+        input::placeholder {
+            color: #666666;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .checkbox-label {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid #000000;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 11px;
+        }
+        
+        .checkbox-label:hover {
+            background: rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .checkbox-label input {
+            width: auto;
+            margin-right: 6px;
+            cursor: pointer;
+        }
+        
+        .checkbox-label input:checked + span,
+        .checkbox-label:has(input:checked) {
+            background: rgba(0, 0, 0, 0.15);
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #ffffff;
+            color: #000000;
+            border: 2px solid #000000;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button::before {
+            content: '> ';
+        }
+        
+        button:hover {
+            background: rgba(0, 0, 0, 0.05);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+        
+        .stat-box {
+            text-align: center;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.02);
+            border: 1px solid #000000;
+        }
+        
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #000000;
+            text-shadow: none;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            color: #000000;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .alert {
+            padding: 12px;
+            border: 1px solid;
+            margin-bottom: 15px;
+            font-size: 12px;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        .alert-success {
+            border-color: #000000;
+            color: #000000;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .alert-error {
+            border-color: #000000;
+            color: #000000;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        #internshipsList {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        #internshipsList::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #internshipsList::-webkit-scrollbar-track {
+            background: #ffffff;
+        }
+        
+        #internshipsList::-webkit-scrollbar-thumb {
+            background: #000000;
+            border: 1px solid #ffffff;
+        }
+        
+        .internship-item {
+            padding: 12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+            margin-bottom: 10px;
+            background: rgba(0, 0, 0, 0.02);
+        }
+        
+        .internship-item:last-child {
+            border-bottom: none;
+        }
+        
+        .internship-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .company-name {
+            font-weight: bold;
+            font-size: 14px;
+            color: #000000;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .position-title {
+            color: #000000;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+        
+        .details {
+            font-size: 10px;
+            color: #333333;
+            margin-top: 5px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .apply-link {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: #ffffff;
+            color: #000000;
+            text-decoration: none;
+            border: 1px solid #000000;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+        
+        .apply-link:hover {
+            background: rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Terminal cursor blink animation */
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 14px;
+            background: #000000;
+            animation: blink 1s infinite;
+            margin-left: 2px;
+        }
+        
+        /* Glitch effect */
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+        
+        .glitch {
+            animation: glitch 0.3s;
+        }
+        
+        .trending-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+            font-size: 11px;
+        }
+        
+        .trending-item span:first-child {
+            color: #000000;
+            font-weight: bold;
+        }
+        
+        .trending-item span:last-child {
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="ascii-art">
+    ██╗███╗   ██╗████████╗███████╗██████╗ ███╗   ██╗  ███████╗ ██████╗ ████████╗  ██╗   ██╗███████╗
+    ██║████╗  ██║╚══██╔══╝██╔════╝██╔══██╗████╗  ██║  ██╔════╝██╔═══██╗╚══██╔══╝  ██║   ██║██╔════╝
+    ██║██╔██╗ ██║   ██║   █████╗  ██████╔╝██╔██╗ ██║  █████╗  ██║   ██║   ██║     ██║   ██║███████╗
+    ██║██║╚██╗██║   ██║   ██╔══╝  ██╔══██╗██║╚██╗██║  ██╔══╝  ██║   ██║   ██║     ╚██╗ ██╔╝╚════██║
+    ██║██║ ╚████║   ██║   ███████╗██║  ██║██║ ╚████║  ██║     ╚██████╔╝   ██║      ╚████╔╝ ███████║
+    ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝  ╚═╝      ╚═════╝    ╚═╝       ╚═══╝  ╚══════╝
+            </div>
+            <h1>INTERN FOR US<span class="cursor"></span></h1>
+            <p><span class="terminal-prompt">$</span> Powered by CHAO-DOTDOM</p>
+            <p style="font-size: 11px; color: #000000; margin-top: 5px;">[SYSTEM STATUS: ONLINE] [USERS: CONNECTED] [DATABASE: ACTIVE]</p>
+        </div>
+        
+        <!-- Top Row: Check Internships and Sign Up -->
+        <div class="grid">
+            <!-- Check Internships Form -->
+            <div class="card">
+                <h2><span class="terminal-prompt">></span> CHECK THE INTERNSHIPS</h2>
+                <div id="checkAlertContainer"></div>
+                
+                <form id="checkForm">
+                    <div class="form-group">
+                        <label><span class="terminal-prompt">[+]</span> Internship Types</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="checkJobType" value="Software Engineering">
+                                <span>Software Engineering</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="checkJobType" value="Data Science">
+                                <span>Data Science</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="checkJobType" value="Product">
+                                <span>Product</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="checkJobType" value="Design">
+                                <span>Design</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="checkJobType" value="Marketing">
+                                <span>Marketing</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><span class="terminal-prompt">[+]</span> Locations</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="checkLocation" value="All Locations" id="checkAllLocations">
+                                <span>All Locations</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="checkLocation" value="Remote">
+                                <span>Remote</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="checkLocation" value="New York">
+                                <span>New York</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="checkLocation" value="San Francisco">
+                                <span>San Francisco</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="checkLocation" value="Seattle">
+                                <span>Seattle</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="checkLocation" value="Austin">
+                                <span>Austin</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="checkSponsorship"><span class="terminal-prompt">[+]</span> Sponsorship Required?</label>
+                        <select id="checkSponsorship">
+                            <option value="">All</option>
+                            <option value="No sponsorship">No - I don't need sponsorship</option>
+                            <option value="Sponsorship available">Yes - I need sponsorship</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" id="checkBtn">CHECK THE INTERNSHIPS</button>
+                </form>
+            </div>
+            
+            <!-- Registration Form -->
+            <div class="card">
+                <h2><span class="terminal-prompt">></span> USER REGISTRATION</h2>
+                <div id="alertContainer"></div>
+                
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="email"><span class="terminal-prompt">[+]</span> Email Address</label>
+                        <input type="email" id="email" required placeholder="user@domain.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><span class="terminal-prompt">[+]</span> Internship Types</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="jobType" value="Software Engineering">
+                                <span>Software Engineering</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="jobType" value="Data Science">
+                                <span>Data Science</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="jobType" value="Product">
+                                <span>Product</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="jobType" value="Design">
+                                <span>Design</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="jobType" value="Marketing">
+                                <span>Marketing</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><span class="terminal-prompt">[+]</span> Locations</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="location" value="All Locations" id="allLocations">
+                                <span>All Locations</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="location" value="Remote">
+                                <span>Remote</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="location" value="New York">
+                                <span>New York</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="location" value="San Francisco">
+                                <span>San Francisco</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="location" value="Seattle">
+                                <span>Seattle</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="location" value="Austin">
+                                <span>Austin</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sponsorship"><span class="terminal-prompt">[+]</span> Sponsorship Required?</label>
+                        <select id="sponsorship">
+                            <option value="false">No - I don't need sponsorship</option>
+                            <option value="true">Yes - I need sponsorship</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="frequency"><span class="terminal-prompt">[+]</span> Notification Frequency</label>
+                        <select id="frequency">
+                            <option value="immediate">Immediate (as they appear)</option>
+                            <option value="daily">Daily Digest (once per day)</option>
+                            <option value="weekly">Weekly Digest (once per week)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="timeGroup">
+                        <label for="digestTime"><span class="terminal-prompt">[+]</span> Digest Time</label>
+                        <input type="time" id="digestTime" value="09:00">
+                    </div>
+                    
+                    <div class="form-group hidden" id="dayGroup">
+                        <label for="digestDay"><span class="terminal-prompt">[+]</span> Weekly Digest Day</label>
+                        <select id="digestDay">
+                            <option value="monday">Monday</option>
+                            <option value="tuesday">Tuesday</option>
+                            <option value="wednesday">Wednesday</option>
+                            <option value="thursday">Thursday</option>
+                            <option value="friday">Friday</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" id="submitBtn">EXECUTE REGISTRATION</button>
+                </form>
+            </div>
+            
+        </div>
+        
+        <!-- System Metrics Row -->
+        <div class="card" style="margin-top: 20px;">
+            <h2><span class="terminal-prompt">></span> SYSTEM METRICS</h2>
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-number" id="statInternships">---</div>
+                    <div class="stat-label">Active Internships</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="statUsers">---</div>
+                    <div class="stat-label">Subscribers</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="statWeekly">---</div>
+                    <div class="stat-label">Added This Week</div>
+                </div>
+            </div>
+            
+            <h3 style="margin-top: 20px; margin-bottom: 10px; font-size: 12px; border-bottom: 1px solid #000000; padding-bottom: 5px; color: #000000;">
+                <span class="terminal-prompt">></span> TRENDING COMPANIES
+            </h3>
+            <div id="trendingCompanies">Loading...</div>
+        </div>
+        
+        <!-- Latest Internships -->
+        <div class="card" style="margin-top: 20px;">
+            <h2><span class="terminal-prompt">></span> LATEST INTERNSHIP LISTINGS</h2>
+            <div id="internshipsList">Loading internships...</div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:8000/api';
+        
+        // Show/hide digest options based on frequency
+        document.getElementById('frequency').addEventListener('change', function() {
+            const timeGroup = document.getElementById('timeGroup');
+            const dayGroup = document.getElementById('dayGroup');
+            
+            if (this.value === 'immediate') {
+                timeGroup.classList.add('hidden');
+                dayGroup.classList.add('hidden');
+            } else if (this.value === 'daily') {
+                timeGroup.classList.remove('hidden');
+                dayGroup.classList.add('hidden');
+            } else if (this.value === 'weekly') {
+                timeGroup.classList.remove('hidden');
+                dayGroup.classList.remove('hidden');
+            }
+        });
+        
+        // Handle "All Locations" checkbox
+        document.getElementById('allLocations').addEventListener('change', function() {
+            const locationCheckboxes = document.querySelectorAll('input[name="location"]');
+            if (this.checked) {
+                // Uncheck all other locations
+                locationCheckboxes.forEach(cb => {
+                    if (cb.id !== 'allLocations') {
+                        cb.checked = false;
+                        cb.disabled = true;
+                    }
+                });
+            } else {
+                // Re-enable other location checkboxes
+                locationCheckboxes.forEach(cb => {
+                    if (cb.id !== 'allLocations') {
+                        cb.disabled = false;
+                    }
+                });
+            }
+        });
+        
+        // If any other location is checked, uncheck "All Locations"
+        document.querySelectorAll('input[name="location"]').forEach(cb => {
+            if (cb.id !== 'allLocations') {
+                cb.addEventListener('change', function() {
+                    if (this.checked) {
+                        document.getElementById('allLocations').checked = false;
+                        document.getElementById('allLocations').disabled = false;
+                    }
+                });
+            }
+        });
+        
+        // Handle "All Locations" checkbox for check form
+        document.getElementById('checkAllLocations').addEventListener('change', function() {
+            const locationCheckboxes = document.querySelectorAll('input[name="checkLocation"]');
+            if (this.checked) {
+                locationCheckboxes.forEach(cb => {
+                    if (cb.id !== 'checkAllLocations') {
+                        cb.checked = false;
+                        cb.disabled = true;
+                    }
+                });
+            } else {
+                locationCheckboxes.forEach(cb => {
+                    if (cb.id !== 'checkAllLocations') {
+                        cb.disabled = false;
+                    }
+                });
+            }
+        });
+        
+        // If any other location is checked in check form, uncheck "All Locations"
+        document.querySelectorAll('input[name="checkLocation"]').forEach(cb => {
+            if (cb.id !== 'checkAllLocations') {
+                cb.addEventListener('change', function() {
+                    if (this.checked) {
+                        document.getElementById('checkAllLocations').checked = false;
+                        document.getElementById('checkAllLocations').disabled = false;
+                    }
+                });
+            }
+        });
+        
+        // Handle check internships form submission
+        document.getElementById('checkForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const checkBtn = document.getElementById('checkBtn');
+            checkBtn.disabled = true;
+            checkBtn.textContent = '> SEARCHING...';
+            
+            // Get selected filters
+            const jobTypes = Array.from(document.querySelectorAll('input[name="checkJobType"]:checked'))
+                .map(cb => cb.value);
+            const locations = Array.from(document.querySelectorAll('input[name="checkLocation"]:checked'))
+                .map(cb => cb.value);
+            const sponsorship = document.getElementById('checkSponsorship').value;
+            
+            try {
+                // Fetch ALL internships from database (no filters initially)
+                let allInternships = [];
+                const response = await fetch(`${API_URL}/internships?limit=100`);
+                allInternships = await response.json();
+                
+                console.log('Total internships fetched:', allInternships.length);
+                if (allInternships.length > 0) {
+                    console.log('Sample internship:', {
+                        position: allInternships[0].position_title,
+                        locations: allInternships[0].locations,
+                        sponsorship: allInternships[0].sponsorship_info
+                    });
+                }
+                
+                // Apply client-side filtering based on user selections
+                let filteredInternships = allInternships.filter(internship => {
+                    // Filter by job types (position title)
+                    if (jobTypes.length > 0) {
+                        const positionLower = (internship.position_title || '').toLowerCase();
+                        const matchesJobType = jobTypes.some(jt => {
+                            const jobTypeLower = jt.toLowerCase();
+                            // More flexible matching: check if job type appears in position title
+                            // Also check for variations (e.g., "Software Engineering" matches "Software Engineer", "Software Development", etc.)
+                            const jobTypeWords = jobTypeLower.split(' ');
+                            const mainWord = jobTypeWords[0]; // e.g., "software" from "software engineering"
+                            
+                            return positionLower.includes(jobTypeLower) || 
+                                   positionLower.includes(mainWord) ||
+                                   (jobTypeLower.includes('software') && positionLower.includes('software')) ||
+                                   (jobTypeLower.includes('data') && positionLower.includes('data')) ||
+                                   (jobTypeLower.includes('product') && positionLower.includes('product'));
+                        });
+                        if (!matchesJobType) {
+                            console.log('Filtered out by job type:', internship.position_title);
+                            return false;
+                        }
+                    }
+                    
+                    // Filter by locations - SKIP if "All Locations" is selected
+                    if (locations.length > 0 && !locations.includes('All Locations')) {
+                        const internshipLocations = internship.locations || [];
+                        const locationStrings = Array.isArray(internshipLocations) 
+                            ? internshipLocations.map(l => String(l).toLowerCase())
+                            : [String(internshipLocations).toLowerCase()];
+                        
+                        const matchesLocation = locations.some(selectedLoc => {
+                            if (selectedLoc === 'All Locations') return true;
+                            
+                            const selectedLocLower = selectedLoc.toLowerCase();
+                            // Check if any internship location contains or is contained by selected location
+                            return locationStrings.some(intLoc => {
+                                const intLocClean = String(intLoc).toLowerCase().trim();
+                                const selectedLocClean = selectedLocLower.trim();
+                                // Exact match or substring match
+                                return intLocClean === selectedLocClean ||
+                                       intLocClean.includes(selectedLocClean) ||
+                                       selectedLocClean.includes(intLocClean);
+                            });
+                        });
+                        
+                        if (!matchesLocation) {
+                            return false;
+                        }
+                    }
+                    // If "All Locations" is selected, skip location filtering entirely (don't filter)
+                    
+                    // Filter by sponsorship
+                    if (sponsorship && sponsorship !== '') {
+                        const internshipSponsor = (internship.sponsorship_info || '').toLowerCase().trim();
+                        
+                        if (sponsorship === 'No sponsorship') {
+                            // User doesn't need sponsorship - show ALL internships (they don't care about sponsorship)
+                            // So we don't filter at all - show everything
+                            // (This option means "I don't need sponsorship", so I want to see all internships)
+                        } else if (sponsorship === 'Sponsorship available') {
+                            // User NEEDS sponsorship - exclude ONLY internships that explicitly say "no sponsorship"
+                            // Show everything else: "Sponsorship available", "Not specified", empty, etc.
+                            if (internshipSponsor.includes('no sponsorship')) {
+                                console.log('Filtered out by sponsorship (needs sponsorship):', internship.sponsorship_info);
+                                return false;
+                            }
+                            // All other cases pass (sponsorship available, not specified, empty, etc.)
+                        }
+                        // If sponsorship is empty string or "All", show all (don't filter)
+                    }
+                    
+                    return true;
+                });
+                
+                console.log('Filter results:', {
+                    total: allInternships.length,
+                    filtered: filteredInternships.length,
+                    jobTypes: jobTypes,
+                    locations: locations,
+                    sponsorship: sponsorship
+                });
+                
+                // Display filtered results (all from database, just filtered client-side)
+                displayInternships(filteredInternships, jobTypes, locations, sponsorship);
+                
+                showCheckAlert(`[SUCCESS] Found ${filteredInternships.length} internship(s) matching your criteria from ${allInternships.length} total`, 'success');
+            } catch (error) {
+                showCheckAlert('[ERROR] Failed to search internships', 'error');
+                console.error('Error:', error);
+            }
+            
+            checkBtn.disabled = false;
+            checkBtn.textContent = '> CHECK THE INTERNSHIPS';
+        });
+        
+        function showCheckAlert(message, type) {
+            const alertContainer = document.getElementById('checkAlertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+        
+        function displayInternships(internships, jobTypes, locations, sponsorship) {
+            const internshipsList = document.getElementById('internshipsList');
+            
+            if (internships.length === 0) {
+                internshipsList.innerHTML = 
+                    '<p style="text-align: center; color: #000000; font-size: 11px;">[NO INTERNSHIPS FOUND] Try adjusting your filters</p>';
+                return;
+            }
+            
+            // Show active filters
+            let filterInfo = '';
+            if (jobTypes.length > 0) {
+                filterInfo += `<div style="font-size: 10px; color: #333333; margin-bottom: 10px;">FILTERS: Job Types: ${jobTypes.join(', ')}</div>`;
+            }
+            if (locations.length > 0 && !locations.includes('All Locations')) {
+                filterInfo += `<div style="font-size: 10px; color: #333333; margin-bottom: 10px;">LOCATIONS: ${locations.join(', ')}</div>`;
+            }
+            if (sponsorship) {
+                filterInfo += `<div style="font-size: 10px; color: #333333; margin-bottom: 10px;">SPONSORSHIP: ${sponsorship}</div>`;
+            }
+            
+            const html = filterInfo + internships.map(i => `
+                <div class="internship-item">
+                    <div class="company-name">[${i.company_name}]</div>
+                    <div class="position-title">> ${i.position_title}</div>
+                    <div class="details">
+                        LOC: ${(i.locations || []).join(', ') || 'Not specified'} | 
+                        SPONSOR: ${i.sponsorship_info || 'Not specified'}
+                        ${i.change_count > 0 ? ' | [UPDATED]' : ''}
+                    </div>
+                    <a href="${i.application_url}" target="_blank" class="apply-link">
+                        [APPLY] →
+                    </a>
+                </div>
+            `).join('');
+            
+            internshipsList.innerHTML = html;
+        }
+        
+        // Handle form submission
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '> PROCESSING...';
+            
+            const email = document.getElementById('email').value;
+            const sponsorship = document.getElementById('sponsorship').value === 'true';
+            const frequency = document.getElementById('frequency').value;
+            const digestTime = document.getElementById('digestTime').value;
+            const digestDay = document.getElementById('digestDay').value;
+            
+            // Get selected job types
+            const jobTypes = Array.from(document.querySelectorAll('input[name="jobType"]:checked'))
+                .map(cb => cb.value);
+            
+            // Get selected locations
+            const locations = Array.from(document.querySelectorAll('input[name="location"]:checked'))
+                .map(cb => cb.value);
+            
+            if (jobTypes.length === 0) {
+                showAlert('[ERROR] Please select at least one internship type', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '> EXECUTE REGISTRATION';
+                return;
+            }
+            
+            if (locations.length === 0) {
+                showAlert('[ERROR] Please select at least one location', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '> EXECUTE REGISTRATION';
+                return;
+            }
+            
+            const data = {
+                email: email,
+                preferences: {
+                    job_types: jobTypes,
+                    sponsorship_required: sponsorship,
+                    locations: locations,
+                    notification_frequency: frequency,
+                    digest_time: digestTime,
+                    digest_day: digestDay
+                }
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/users/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    showAlert('[SUCCESS] Registration complete. Check your email for alerts.', 'success');
+                    document.getElementById('registerForm').reset();
+                    loadStats();
+                } else {
+                    const error = await response.json();
+                    showAlert(`[ERROR] ${error.detail || 'Registration failed'}`, 'error');
+                }
+            } catch (error) {
+                showAlert('[ERROR] Network error. Please try again.', 'error');
+            }
+            
+            submitBtn.disabled = false;
+            submitBtn.textContent = '> EXECUTE REGISTRATION';
+        });
+        
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+        
+        // Load stats
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_URL}/analytics/dashboard`);
+                const data = await response.json();
+                
+                document.getElementById('statInternships').textContent = 
+                    data.overview.total_active_internships || 0;
+                document.getElementById('statUsers').textContent = 
+                    data.overview.total_active_users || 0;
+                document.getElementById('statWeekly').textContent = 
+                    data.overview.new_this_week || 0;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+        
+        // Load trending companies
+        async function loadTrendingCompanies() {
+            try {
+                const response = await fetch(`${API_URL}/analytics/trending/companies?limit=5`);
+                const companies = await response.json();
+                
+                if (companies.length === 0) {
+                    document.getElementById('trendingCompanies').innerHTML = '<div style="color: #000000; font-size: 10px;">[NO DATA]</div>';
+                    return;
+                }
+                
+                const html = companies.map(c => `
+                    <div class="trending-item">
+                        <span>${c.company}</span>
+                        <span>${c.count} positions</span>
+                    </div>
+                `).join('');
+                
+                document.getElementById('trendingCompanies').innerHTML = html;
+            } catch (error) {
+                document.getElementById('trendingCompanies').innerHTML = '<div style="color: #000000; font-size: 10px;">[ERROR LOADING DATA]</div>';
+            }
+        }
+        
+        // Load latest internships (without filters - initial load)
+        async function loadInternships() {
+            try {
+                const response = await fetch(`${API_URL}/internships?limit=100`);
+                const internships = await response.json();
+                
+                if (internships.length === 0) {
+                    document.getElementById('internshipsList').innerHTML = 
+                        '<p style="text-align: center; color: #000000; font-size: 11px;">[NO INTERNSHIPS AVAILABLE] Scrape will populate this!</p>';
+                    return;
+                }
+                
+                const html = internships.map(i => `
+                    <div class="internship-item">
+                        <div class="company-name">[${i.company_name}]</div>
+                        <div class="position-title">> ${i.position_title}</div>
+                        <div class="details">
+                            LOC: ${(i.locations || []).join(', ') || 'Not specified'} | 
+                            SPONSOR: ${i.sponsorship_info || 'Not specified'}
+                            ${i.change_count > 0 ? ' | [UPDATED]' : ''}
+                        </div>
+                        <a href="${i.application_url}" target="_blank" class="apply-link">
+                            [APPLY] →
+                        </a>
+                    </div>
+                `).join('');
+                
+                document.getElementById('internshipsList').innerHTML = html;
+            } catch (error) {
+                document.getElementById('internshipsList').innerHTML = 
+                    '<p style="text-align: center; color: #000000; font-size: 11px;">[ERROR LOADING INTERNSHIPS]</p>';
+            }
+        }
+        
+        // Load data on page load
+        loadStats();
+        loadTrendingCompanies();
+        loadInternships();
+        
+        // Refresh data every 5 minutes
+        setInterval(() => {
+            loadStats();
+            loadTrendingCompanies();
+            loadInternships();
+        }, 300000);
+        
+        // Add glitch effect on hover for header
+        document.querySelector('.header h1').addEventListener('mouseenter', function() {
+            this.classList.add('glitch');
+            setTimeout(() => this.classList.remove('glitch'), 300);
+        });
+    </script>
+</body>
+</html>
