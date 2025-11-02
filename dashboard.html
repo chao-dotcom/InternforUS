@@ -17,6 +17,7 @@
             padding: 20px;
             position: relative;
             overflow-x: hidden;
+            font-size: 18px;
         }
         
         /* Scanline effect */
@@ -69,7 +70,7 @@
         
         .ascii-art {
             font-family: 'Courier New', monospace;
-            font-size: 12px;
+            font-size: 16px;
             line-height: 1.2;
             color: #000000;
             text-shadow: none;
@@ -78,7 +79,7 @@
         }
         
         .header h1 {
-            font-size: 32px;
+            font-size: 48px;
             margin-bottom: 10px;
             text-shadow: none;
             letter-spacing: 3px;
@@ -86,7 +87,7 @@
         }
         
         .header p {
-            font-size: 14px;
+            font-size: 18px;
             color: #000000;
             text-transform: uppercase;
             letter-spacing: 2px;
@@ -125,7 +126,7 @@
         }
         
         .card h2 {
-            font-size: 18px;
+            font-size: 26px;
             margin-bottom: 15px;
             color: #000000;
             text-transform: uppercase;
@@ -142,19 +143,19 @@
             display: block;
             margin-bottom: 5px;
             color: #000000;
-            font-size: 12px;
+            font-size: 16px;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
         
         input, select {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             background: #ffffff;
             border: 1px solid #000000;
             color: #000000;
             font-family: 'Share Tech Mono', monospace;
-            font-size: 12px;
+            font-size: 16px;
             outline: none;
         }
         
@@ -176,12 +177,12 @@
         .checkbox-label {
             display: inline-flex;
             align-items: center;
-            padding: 6px 12px;
+            padding: 8px 14px;
             background: rgba(0, 0, 0, 0.05);
             border: 1px solid #000000;
             cursor: pointer;
             transition: all 0.2s;
-            font-size: 11px;
+            font-size: 15px;
         }
         
         .checkbox-label:hover {
@@ -203,12 +204,12 @@
         
         button {
             width: 100%;
-            padding: 12px;
+            padding: 16px;
             background: #ffffff;
             color: #000000;
             border: 2px solid #000000;
             font-family: 'Share Tech Mono', monospace;
-            font-size: 14px;
+            font-size: 18px;
             font-weight: bold;
             cursor: pointer;
             text-transform: uppercase;
@@ -251,7 +252,7 @@
         }
         
         .stat-number {
-            font-size: 28px;
+            font-size: 40px;
             font-weight: bold;
             color: #000000;
             text-shadow: none;
@@ -259,7 +260,7 @@
         }
         
         .stat-label {
-            font-size: 10px;
+            font-size: 14px;
             color: #000000;
             margin-top: 5px;
             text-transform: uppercase;
@@ -267,10 +268,10 @@
         }
         
         .alert {
-            padding: 12px;
+            padding: 16px;
             border: 1px solid;
             margin-bottom: 15px;
-            font-size: 12px;
+            font-size: 16px;
             background: rgba(255, 255, 255, 0.9);
         }
         
@@ -326,7 +327,7 @@
         
         .company-name {
             font-weight: bold;
-            font-size: 14px;
+            font-size: 18px;
             color: #000000;
             text-transform: uppercase;
             margin-bottom: 5px;
@@ -335,11 +336,11 @@
         .position-title {
             color: #000000;
             margin: 5px 0;
-            font-size: 12px;
+            font-size: 16px;
         }
         
         .details {
-            font-size: 10px;
+            font-size: 14px;
             color: #333333;
             margin-top: 5px;
             font-family: 'Courier New', monospace;
@@ -348,12 +349,12 @@
         .apply-link {
             display: inline-block;
             margin-top: 8px;
-            padding: 6px 12px;
+            padding: 10px 16px;
             background: #ffffff;
             color: #000000;
             text-decoration: none;
             border: 1px solid #000000;
-            font-size: 11px;
+            font-size: 15px;
             text-transform: uppercase;
             letter-spacing: 1px;
             transition: all 0.2s;
@@ -398,7 +399,7 @@
             justify-content: space-between;
             padding: 8px 0;
             border-bottom: 1px solid rgba(0, 0, 0, 0.2);
-            font-size: 11px;
+            font-size: 15px;
         }
         
         .trending-item span:first-child {
@@ -424,7 +425,7 @@
             </div>
             <h1>INTERN FOR US<span class="cursor"></span></h1>
             <p><span class="terminal-prompt">$</span> Powered by CHAO-DOTDOM</p>
-            <p style="font-size: 11px; color: #000000; margin-top: 5px;">[SYSTEM STATUS: ONLINE] [USERS: CONNECTED] [DATABASE: ACTIVE]</p>
+            <p style="font-size: 15px; color: #000000; margin-top: 5px;">[SYSTEM STATUS: ONLINE] [USERS: CONNECTED] [DATABASE: ACTIVE]</p>
         </div>
         
         <!-- Top Row: Check Internships and Sign Up -->
@@ -628,7 +629,7 @@
                 </div>
             </div>
             
-            <h3 style="margin-top: 20px; margin-bottom: 10px; font-size: 12px; border-bottom: 1px solid #000000; padding-bottom: 5px; color: #000000;">
+            <h3 style="margin-top: 20px; margin-bottom: 10px; font-size: 18px; border-bottom: 1px solid #000000; padding-bottom: 5px; color: #000000;">
                 <span class="terminal-prompt">></span> TRENDING COMPANIES
             </h3>
             <div id="trendingCompanies">Loading...</div>
@@ -869,20 +870,20 @@
             
             if (internships.length === 0) {
                 internshipsList.innerHTML = 
-                    '<p style="text-align: center; color: #000000; font-size: 11px;">[NO INTERNSHIPS FOUND] Try adjusting your filters</p>';
+                    '<p style="text-align: center; color: #000000; font-size: 16px;">[NO INTERNSHIPS FOUND] Try adjusting your filters</p>';
                 return;
             }
             
             // Show active filters
             let filterInfo = '';
             if (jobTypes.length > 0) {
-                filterInfo += `<div style="font-size: 10px; color: #333333; margin-bottom: 10px;">FILTERS: Job Types: ${jobTypes.join(', ')}</div>`;
+                filterInfo += `<div style="font-size: 14px; color: #333333; margin-bottom: 10px;">FILTERS: Job Types: ${jobTypes.join(', ')}</div>`;
             }
             if (locations.length > 0 && !locations.includes('All Locations')) {
-                filterInfo += `<div style="font-size: 10px; color: #333333; margin-bottom: 10px;">LOCATIONS: ${locations.join(', ')}</div>`;
+                filterInfo += `<div style="font-size: 14px; color: #333333; margin-bottom: 10px;">LOCATIONS: ${locations.join(', ')}</div>`;
             }
             if (sponsorship) {
-                filterInfo += `<div style="font-size: 10px; color: #333333; margin-bottom: 10px;">SPONSORSHIP: ${sponsorship}</div>`;
+                filterInfo += `<div style="font-size: 14px; color: #333333; margin-bottom: 10px;">SPONSORSHIP: ${sponsorship}</div>`;
             }
             
             const html = filterInfo + internships.map(i => `
@@ -1013,7 +1014,7 @@
                 const companies = await response.json();
                 
                 if (companies.length === 0) {
-                    document.getElementById('trendingCompanies').innerHTML = '<div style="color: #000000; font-size: 10px;">[NO DATA]</div>';
+                    document.getElementById('trendingCompanies').innerHTML = '<div style="color: #000000; font-size: 15px;">[NO DATA]</div>';
                     return;
                 }
                 
@@ -1026,7 +1027,7 @@
                 
                 document.getElementById('trendingCompanies').innerHTML = html;
             } catch (error) {
-                document.getElementById('trendingCompanies').innerHTML = '<div style="color: #000000; font-size: 10px;">[ERROR LOADING DATA]</div>';
+                document.getElementById('trendingCompanies').innerHTML = '<div style="color: #000000; font-size: 15px;">[ERROR LOADING DATA]</div>';
             }
         }
         
@@ -1038,7 +1039,7 @@
                 
                 if (internships.length === 0) {
                     document.getElementById('internshipsList').innerHTML = 
-                        '<p style="text-align: center; color: #000000; font-size: 11px;">[NO INTERNSHIPS AVAILABLE] Scrape will populate this!</p>';
+                        '<p style="text-align: center; color: #000000; font-size: 16px;">[NO INTERNSHIPS AVAILABLE] Scrape will populate this!</p>';
                     return;
                 }
                 
@@ -1060,7 +1061,7 @@
                 document.getElementById('internshipsList').innerHTML = html;
             } catch (error) {
                 document.getElementById('internshipsList').innerHTML = 
-                    '<p style="text-align: center; color: #000000; font-size: 11px;">[ERROR LOADING INTERNSHIPS]</p>';
+                    '<p style="text-align: center; color: #000000; font-size: 16px;">[ERROR LOADING INTERNSHIPS]</p>';
             }
         }
         

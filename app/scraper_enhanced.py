@@ -22,9 +22,147 @@ class EnhancedInternshipScraper:
             print(f"Error fetching markdown: {e}")
             return ""
     
-    def parse_markdown_table(self, markdown: str) -> List[Dict]:
-        """Parse markdown/HTML table into structured data"""
+    def parse_table_of_contents(self, markdown: str) -> Dict[str, str]:
+        """Parse the table of contents to extract section names and their anchor IDs.
+        
+        Returns:
+            Dictionary mapping section names to anchor IDs
+            e.g., {"Software Engineering": "-software-engineering-internship-roles"}
+        """
+        toc_map = {}
+        lines = markdown.split('\n')
+        
+        # Look for the TOC section (usually has links with anchor IDs)
+        for line in lines:
+            # Match patterns like: 💻 **[Software Engineering](...#-software-engineering-internship-roles)**
+            # Extract section name and anchor ID from markdown links
+            matches = re.findall(r'\[([^\]]+)\]\([^#]*#([^)]+)\)', line)
+            for section_name, anchor_id in matches:
+                # Clean section name (remove emojis if any, keep just text)
+                clean_name = re.sub(r'[^\w\s&,]+', '', section_name).strip()
+                # Store both the full name and cleaned name
+                toc_map[clean_name] = anchor_id
+                toc_map[section_name] = anchor_id
+        
+        return toc_map
+    
+    def generate_anchor_from_header(self, header_text: str) -> str:
+        """Generate GitHub-style anchor ID from a header.
+        
+        GitHub converts headers to anchors by:
+        - Lowercasing
+        - Replacing spaces with hyphens
+        - Removing special chars/emojis
+        - Removing leading/trailing hyphens
+        """
+        # Remove markdown header markers
+        text = re.sub(r'^#+\s*', '', header_text)
+        # Remove emojis and special chars, keep only alphanumeric, spaces, hyphens
+        text = re.sub(r'[^\w\s-]', '', text)
+        # Lowercase and replace spaces with hyphens
+        anchor = text.lower().strip().replace(' ', '-')
+        # Remove multiple consecutive hyphens
+        anchor = re.sub(r'-+', '-', anchor)
+        # Remove leading/trailing hyphens
+        anchor = anchor.strip('-')
+        return anchor
+    
+    def extract_section(self, markdown: str, section_name: str) -> str:
+        """Extract a specific section from markdown by section header name.
+        
+        First tries to find the section using the table of contents anchor IDs,
+        then falls back to text matching.
+        
+        Args:
+            markdown: Full markdown content
+            section_name: Section name to find (e.g., "Software Engineering")
+        
+        Returns:
+            Extracted section content (from header to next ## header), or full markdown if section not found
+        """
+        if not section_name:
+            return markdown
+        
+        lines = markdown.split('\n')
+        section_start = None
+        section_end = None
+        
+        # Step 1: Parse table of contents to get anchor ID mapping
+        toc_map = self.parse_table_of_contents(markdown)
+        target_anchor = None
+        
+        # Look up the anchor ID for this section name
+        section_name_lower = section_name.lower()
+        for toc_name, anchor_id in toc_map.items():
+            if section_name_lower in toc_name.lower() or toc_name.lower() in section_name_lower:
+                target_anchor = anchor_id
+                print(f"Found anchor ID '{target_anchor}' for section '{section_name}' from TOC")
+                break
+        
+        # Step 2: Find the section header using anchor ID or text matching
+        for i, line in enumerate(lines):
+            if not line.strip().startswith('##'):
+                continue
+            
+            # Method 1: Try matching by generated anchor ID
+            if target_anchor:
+                generated_anchor = self.generate_anchor_from_header(line)
+                # Normalize both anchors (remove leading/trailing hyphens for comparison)
+                normalized_target = target_anchor.strip('-').lower()
+                normalized_generated = generated_anchor.strip('-').lower()
+                
+                # Match if they're the same or one contains the other
+                if (normalized_target == normalized_generated or 
+                    normalized_target.endswith(normalized_generated) or
+                    normalized_generated.endswith(normalized_target)):
+                    section_start = i
+                    print(f"Found section '{section_name}' by anchor at line {i}: {line.strip()}")
+                    print(f"  Anchor match: '{target_anchor}' -> '{generated_anchor}'")
+                    break
+            
+            # Method 2: Fallback to text matching (case-insensitive)
+            if section_start is None:
+                header_lower = line.lower()
+                section_name_lower = section_name.lower()
+                if section_name_lower in header_lower:
+                    section_start = i
+                    print(f"Found section '{section_name}' by text match at line {i}: {line.strip()}")
+                    break
+        
+        if section_start is None:
+            print(f"⚠️  Section '{section_name}' not found. Available sections from TOC: {list(toc_map.keys())[:5]}")
+            print(f"   Parsing entire markdown.")
+            return markdown
+        
+        # Step 3: Find the next ## header (end of section)
+        for i in range(section_start + 1, len(lines)):
+            if lines[i].strip().startswith('##') and i != section_start:
+                section_end = i
+                break
+        
+        # Extract section content
+        if section_end:
+            section_content = '\n'.join(lines[section_start:section_end])
+            print(f"✓ Extracted section '{section_name}' (lines {section_start} to {section_end})")
+        else:
+            section_content = '\n'.join(lines[section_start:])
+            print(f"✓ Extracted section '{section_name}' (from line {section_start} to end)")
+        
+        return section_content
+    
+    def parse_markdown_table(self, markdown: str, section_filter: str = None) -> List[Dict]:
+        """Parse markdown/HTML table into structured data
+        
+        Args:
+            markdown: Full markdown content
+            section_filter: Optional section name to filter (e.g., "Software Engineering")
+                          Only tables within that section will be parsed
+        """
         internships = []
+        
+        # Extract specific section if filter is provided
+        if section_filter:
+            markdown = self.extract_section(markdown, section_filter)
         
         # Check if it's HTML table format (from GitHub)
         if '<table>' in markdown and '<td>' in markdown:
@@ -293,11 +431,18 @@ class EnhancedInternshipScraper:
         
         return changes
     
-    def scrape_and_process(self, db: Session) -> Tuple[List[Internship], List[Internship]]:
-        """Scrape and detect new/updated internships"""
+    def scrape_and_process(self, db: Session, section_filter: str = None) -> Tuple[List[Internship], List[Internship]]:
+        """Scrape and detect new/updated internships
+        
+        Args:
+            db: Database session
+            section_filter: Optional section name to filter (e.g., "Software Engineering")
+                          Only internships from that section will be scraped
+        """
         start_time = time.time()
         
-        print("Starting enhanced scrape with change detection...")
+        filter_msg = f" (filtered to '{section_filter}')" if section_filter else ""
+        print(f"Starting enhanced scrape with change detection{filter_msg}...")
         markdown = self.fetch_markdown()
         
         if not markdown:
@@ -305,7 +450,7 @@ class EnhancedInternshipScraper:
             self.record_analytics(db, 0, 0, False, time.time() - start_time, "Failed to fetch markdown")
             return [], []
         
-        scraped_data = self.parse_markdown_table(markdown)
+        scraped_data = self.parse_markdown_table(markdown, section_filter=section_filter)
         print(f"✓ Parsed {len(scraped_data)} internships from GitHub markdown")
         
         if len(scraped_data) == 0:
